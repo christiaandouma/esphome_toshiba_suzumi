@@ -1,0 +1,5 @@
+if(EXISTS "/home/user/esphome_toshiba_suzumi/tests/cpp/build/test_mode_conversions[1]_tests.cmake")
+  include("/home/user/esphome_toshiba_suzumi/tests/cpp/build/test_mode_conversions[1]_tests.cmake")
+else()
+  add_test(test_mode_conversions_NOT_BUILT test_mode_conversions_NOT_BUILT)
+endif()

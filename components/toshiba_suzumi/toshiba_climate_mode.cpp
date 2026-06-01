@@ -47,10 +47,10 @@ const climate::ClimateMode IntToClimateMode(MODE mode) {
  * @param mode The custom fan mode string to convert
  * @return The Toshiba fan mode code
  */
-const optional<FAN> StringToFanLevel(const char* mode) {
-  if (mode == CUSTOM_FAN_LEVEL_2) {
+const optional<FAN> StringToFanLevel(const std::string &mode) {
+  if (str_equals_case_insensitive(mode, CUSTOM_FAN_LEVEL_2)) {
     return FAN::FANMODE_2;
-  } else if (mode == CUSTOM_FAN_LEVEL_4) {
+  } else if (str_equals_case_insensitive(mode, CUSTOM_FAN_LEVEL_4)) {
     return FAN::FANMODE_4;
   } else {
     return nullopt;

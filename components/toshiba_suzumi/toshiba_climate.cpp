@@ -492,7 +492,7 @@ void ToshibaClimateUart::control(const climate::ClimateCall &call) {
 
   if (call.has_custom_fan_mode()) {
     auto fan_mode = call.get_custom_fan_mode();
-    auto payload = StringToFanLevel(fan_mode.c_str());
+    auto payload = StringToFanLevel(fan_mode);
     if (payload.has_value()) {
       ESP_LOGD(TAG, "Setting fan mode to custom: %s", fan_mode.c_str());
       this->set_custom_fan_mode_(fan_mode);

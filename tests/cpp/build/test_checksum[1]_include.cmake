@@ -1,0 +1,5 @@
+if(EXISTS "/home/user/esphome_toshiba_suzumi/tests/cpp/build/test_checksum[1]_tests.cmake")
+  include("/home/user/esphome_toshiba_suzumi/tests/cpp/build/test_checksum[1]_tests.cmake")
+else()
+  add_test(test_checksum_NOT_BUILT test_checksum_NOT_BUILT)
+endif()

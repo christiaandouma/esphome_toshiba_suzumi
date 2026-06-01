@@ -1,0 +1,4 @@
+/home/user/esphome_toshiba_suzumi/tests/cpp/build/CMakeFiles/test_checksum.dir
+/home/user/esphome_toshiba_suzumi/tests/cpp/build/CMakeFiles/test_mode_conversions.dir
+/home/user/esphome_toshiba_suzumi/tests/cpp/build/CMakeFiles/edit_cache.dir
+/home/user/esphome_toshiba_suzumi/tests/cpp/build/CMakeFiles/rebuild_cache.dir
