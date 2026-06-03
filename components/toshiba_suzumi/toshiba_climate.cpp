@@ -160,6 +160,11 @@ void ToshibaClimateUart::process_command_queue_() {
   // format is was not recognized by validate_message_ function.
   // Nothing to do - drop the message to free up communication and allow to send next command.
   if (now - this->last_rx_char_timestamp_ > RECEIVE_TIMEOUT) {
+    if (!this->rx_message_.empty()) {
+      ESP_LOGD(TAG, "RX timeout: dropping incomplete %d-byte message [%s]",
+               this->rx_message_.size(),
+               format_hex_pretty(this->rx_message_).c_str());
+    }
     this->rx_message_.clear();
   }
 
@@ -175,6 +180,9 @@ void ToshibaClimateUart::process_command_queue_() {
       this->command_queue_.erase(this->command_queue_.begin());
       return;
     }
+    ESP_LOGV(TAG, "Sending queued command: type=%d, queue remaining=%d",
+             static_cast<int>(newCommand.cmd),
+             static_cast<int>(this->command_queue_.size()) - 1);
     this->send_to_uart(this->command_queue_.front());
     this->command_queue_.erase(this->command_queue_.begin());
   }
@@ -231,6 +239,8 @@ void ToshibaClimateUart::parseResponse(std::vector<uint8_t> rawData) {
                format_hex_pretty(rawData).c_str());
       return;
   }
+  ESP_LOGD(TAG, "Received response: cmd=0x%02X value=0x%02X length=%d",
+           static_cast<uint8_t>(sensor), value, length);
   switch (sensor) {
     case ToshibaCommandType::TARGET_TEMP:
       ESP_LOGI(TAG, "Received target temp: %d", value);
@@ -287,8 +297,8 @@ void ToshibaClimateUart::parseResponse(std::vector<uint8_t> rawData) {
       }
       break;
     case ToshibaCommandType::OUTDOOR_TEMP:
+      ESP_LOGI(TAG, "Received outdoor temp: %d °C", (int8_t) value);
       if (outdoor_temp_sensor_ != nullptr) {
-        ESP_LOGI(TAG, "Received outdoor temp: %d °C", (int8_t) value);
         outdoor_temp_sensor_->publish_state((int8_t) value);
       }
       break;
@@ -335,6 +345,12 @@ void ToshibaClimateUart::parseResponse(std::vector<uint8_t> rawData) {
       // Outdoor unit status - data offset depends on message length
       uint8_t odu_offset = (length == 22) ? 13 : 15;
       ESP_LOGI(TAG, "Received ODU status");
+      ESP_LOGD(TAG, "ODU: Td=%d°C Ts=%d°C Te=%d°C Load=%.1f%% IAC=%dA",
+               static_cast<int8_t>(rawData[odu_offset + 0]),
+               static_cast<int8_t>(rawData[odu_offset + 1]),
+               static_cast<int8_t>(rawData[odu_offset + 2]),
+               rawData[odu_offset + 3] / 1.7f,
+               rawData[odu_offset + 6]);
       if (cdu_td_temp_sensor_ != nullptr) {
         cdu_td_temp_sensor_->publish_state(static_cast<int8_t>(rawData[odu_offset + 0]));
       }
@@ -356,6 +372,10 @@ void ToshibaClimateUart::parseResponse(std::vector<uint8_t> rawData) {
       // Indoor unit status - data offset depends on message length
       uint8_t idu_offset = (length == 22) ? 13 : 15;
       ESP_LOGI(TAG, "Received IDU status");
+      ESP_LOGD(TAG, "IDU: Tc=%d°C Tcj=%d°C FanRPM=%d",
+               static_cast<int8_t>(rawData[idu_offset + 0]),
+               static_cast<int8_t>(rawData[idu_offset + 1]),
+               rawData[idu_offset + 2]);
       if (fcu_tc_temp_sensor_ != nullptr) {
         fcu_tc_temp_sensor_->publish_state(static_cast<int8_t>(rawData[idu_offset + 0]));
       }
@@ -492,7 +512,7 @@ void ToshibaClimateUart::control(const climate::ClimateCall &call) {
 
   if (call.has_custom_fan_mode()) {
     auto fan_mode = call.get_custom_fan_mode();
-    auto payload = StringToFanLevel(fan_mode.c_str());
+    auto payload = StringToFanLevel(fan_mode);
     if (payload.has_value()) {
       ESP_LOGD(TAG, "Setting fan mode to custom: %s", fan_mode.c_str());
       this->set_custom_fan_mode_(fan_mode);

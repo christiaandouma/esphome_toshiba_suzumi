@@ -86,7 +86,7 @@ const optional<FAN> ClimateFanModeToInt(climate::ClimateFanMode mode);
 
 const LogString *climate_state_to_string(STATE mode);
 
-const optional<FAN> StringToFanLevel(const char* mode);
+const optional<FAN> StringToFanLevel(const std::string &mode);
 const char* IntToCustomFanMode(FAN mode);
 
 const optional<PWR_LEVEL> StringToPwrLevel(const std::string &mode);

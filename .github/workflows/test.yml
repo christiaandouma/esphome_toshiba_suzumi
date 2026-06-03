@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  # ── Python config-schema tests ───────────────────────────────────────────────
+  python:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: pip install -r tests/python/requirements-test.txt
+
+      - name: Run Python tests
+        run: python -m pytest tests/python/ -v
+
+  # ── C++ unit tests ───────────────────────────────────────────────────────────
+  cpp:
+    name: C++ tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools and Google Test
+        run: sudo apt-get update && sudo apt-get install -y cmake libgtest-dev
+
+      - name: Configure
+        run: cmake -B tests/cpp/build -S tests/cpp -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build tests/cpp/build --parallel
+
+      - name: Run tests
+        run: |
+          tests/cpp/build/test_checksum
+          tests/cpp/build/test_mode_conversions
